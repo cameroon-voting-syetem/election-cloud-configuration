@@ -1,0 +1,83 @@
+rabit mq
+
+sudo docker run --hostname rabbitmq --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
+
+-d : Exécute le conteneur en arrière-plan.
+--hostname : Définit le nom d'hôte du conteneur.
+--name : Définit le nom du conteneur.
+-p 5672:5672 : Mappe le port 5672 pour la communication avec RabbitMQ.
+-p 15672:15672 : Mappe le port 15672 pour l'interface de gestion.
+4. Accéder à l'interface de gestion
+Accédez à l'interface de gestion de RabbitMQ à l'adresse suivante : http://localhost:15672 (identifiants par défaut : guest / guest).
+
+5. Arrêter et supprimer RabbitMQ
+Pour arrêter le conteneur RabbitMQ :
+
+Copier
+docker stop rabbitmq
+Pour supprimer le conteneur :
+
+Copier
+docker rm rabbitmq
+
+HpA kubernetes
+Assurez-vous que Metrics Server est installé :
+HPA nécessite que le Metrics Server soit installé dans votre cluster pour récupérer les métriques de CPU et de mémoire. Vous pouvez l'installer avec la commande suivante :
+
+Copier
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+
+Étapes pour Tester la Scalabilité Automatique
+Vérifiez la Configuration du HPA
+
+Assurez-vous que votre HPA est correctement configuré et en cours d'exécution :
+
+Copier
+kubectl get hpa -n microservices
+Générez une Charge de Travail
+
+Vous devez simuler une charge de travail sur votre service pour augmenter l'utilisation du CPU. Vous pouvez utiliser des outils comme Apache Benchmark, wrk, ou hey. Voici un exemple avec hey :
+
+Installez hey si ce n'est pas déjà fait :
+
+Copier
+go install github.com/rakyll/hey@latest
+Ensuite, exécutez une commande pour générer du trafic :
+
+Copier
+hey -n 1000 -c 100 http://<service-company-url>
+Remplacez <service-company-url> par l'URL de votre service.
+
+Surveillez le HPA
+
+Pendant que vous générez la charge, surveillez le HPA pour voir s'il ajuste le nombre de réplicas :
+
+Copier
+kubectl get hpa -n microservices -w
+L'option -w permet de suivre les mises à jour en temps réel.
+
+Vérifiez les Pods
+
+Observez le nombre de réplicas de votre déploiement service-company :
+
+Copier
+kubectl get pods -n microservices
+Analysez les Logs
+
+Vérifiez les logs de votre service pour vous assurer qu'il gère correctement la charge :
+
+Copier
+kubectl logs -l app=service-company -n microservices
+Arrêtez la Charge
+
+Une fois que vous avez terminé les tests, arrêtez la génération de charge pour voir si le HPA réduit le nombre de réplicas :
+
+Copier
+# Si vous avez utilisé `hey`, arrêtez le processus.
+Analyse Finale
+
+Après avoir effectué les tests, analysez les résultats pour voir comment le HPA a réagi à la charge. Vérifiez si le nombre de réplicas a augmenté et diminué comme prévu.
+
+Conclusion
+Ces étapes vous permettront de tester la scalabilité automatique de votre service service-company. Si vous avez besoin d'aide pour une étape spécifique ou si vous rencontrez des problèmes, n'hésitez pas à demander !
